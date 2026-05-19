@@ -69,6 +69,7 @@ export default function PortfolioHome() {
   const [formLoading, setFormLoading] = useState(false);
   const [formSuccess, setFormSuccess] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [emailLogs, setEmailLogs] = useState<any | null>(null);
   const [showEmailLogs, setShowEmailLogs] = useState(false);
 
@@ -128,7 +129,45 @@ export default function PortfolioHome() {
     setFormLoading(true);
     setFormSuccess(false);
     setFormError(null);
+    setValidationErrors({});
     setEmailLogs(null);
+
+    // Frontend Field Validation
+    const errors: Record<string, string> = {};
+    
+    if (!formData.name.trim()) {
+      errors.name = "Пожалуйста, введите ваше имя";
+    } else if (formData.name.trim().length < 2) {
+      errors.name = "Имя должно содержать не менее 2 символов";
+    }
+
+    if (!formData.phone.trim()) {
+      errors.phone = "Пожалуйста, введите номер телефона";
+    } else if (formData.phone.trim().length < 5) {
+      errors.phone = "Некорректный формат телефона";
+    }
+
+    if (!formData.email.trim()) {
+      errors.email = "Пожалуйста, введите ваш email";
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email.trim())) {
+        errors.email = "Введите корректный email (например, name@domain.com)";
+      }
+    }
+
+    if (!formData.comment.trim()) {
+      errors.comment = "Пожалуйста, введите ваше сообщение";
+    } else if (formData.comment.trim().length < 10) {
+      errors.comment = "Сообщение должно содержать не менее 10 символов";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setFormError("Пожалуйста, заполните обязательные поля корректно.");
+      setFormLoading(false);
+      return;
+    }
 
     try {
       const response = await fetch("/api/contact", {
@@ -145,6 +184,7 @@ export default function PortfolioHome() {
 
       setFormSuccess(true);
       setFormData({ name: "", phone: "", email: "", comment: "" });
+      setValidationErrors({});
       
       // Save debug simulation data if SMTP was not configured
       if (data.simulated && data.debugData) {
@@ -1346,20 +1386,38 @@ export default function PortfolioHome() {
                 <div className="absolute top-0 left-0 w-full h-[4px] bg-gradient-to-r from-indigo-500 to-emerald-500"></div>
 
                 {!formSuccess ? (
-                  <form onSubmit={handleContactSubmit} className="space-y-5">
+                  <form onSubmit={handleContactSubmit} noValidate className="space-y-5">
                     
                     {/* Fields: Name */}
                     <div className="space-y-1.5">
                       <label className="text-[11px] uppercase tracking-wider font-bold text-zinc-400">Ваше имя *</label>
                       <input 
                         type="text"
-                        required
                         disabled={formLoading}
                         value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        onChange={(e) => {
+                          setFormData({ ...formData, name: e.target.value });
+                          if (validationErrors.name) {
+                            setValidationErrors(prev => {
+                              const copy = { ...prev };
+                              delete copy.name;
+                              return copy;
+                            });
+                          }
+                        }}
                         placeholder="Александр"
-                        className="w-full bg-zinc-950 border border-zinc-850 focus:border-indigo-500/50 rounded-xl px-4 py-3 text-xs text-zinc-200 placeholder:text-zinc-650 focus:outline-none transition-all disabled:opacity-50"
+                        className={`w-full bg-zinc-950 border ${
+                          validationErrors.name 
+                            ? "border-red-500/50 focus:border-red-500/70 shadow-[0_0_10px_rgba(239,68,68,0.05)]" 
+                            : "border-zinc-850 focus:border-indigo-500/50"
+                        } rounded-xl px-4 py-3 text-xs text-zinc-200 placeholder:text-zinc-650 focus:outline-none transition-all disabled:opacity-50`}
                       />
+                      {validationErrors.name && (
+                        <p className="text-[10px] text-red-400 font-medium flex items-center gap-1.5 mt-1 animate-pulse">
+                          <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                          {validationErrors.name}
+                        </p>
+                      )}
                     </div>
 
                     {/* Row: Phone and Email */}
@@ -1369,26 +1427,62 @@ export default function PortfolioHome() {
                         <label className="text-[11px] uppercase tracking-wider font-bold text-zinc-400">Телефон *</label>
                         <input 
                           type="tel"
-                          required
                           disabled={formLoading}
                           value={formData.phone}
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          onChange={(e) => {
+                            setFormData({ ...formData, phone: e.target.value });
+                            if (validationErrors.phone) {
+                              setValidationErrors(prev => {
+                                const copy = { ...prev };
+                                delete copy.phone;
+                                return copy;
+                              });
+                            }
+                          }}
                           placeholder="+7 (999) 000-00-00"
-                          className="w-full bg-zinc-950 border border-zinc-850 focus:border-indigo-500/50 rounded-xl px-4 py-3 text-xs text-zinc-200 placeholder:text-zinc-650 focus:outline-none transition-all disabled:opacity-50"
+                          className={`w-full bg-zinc-950 border ${
+                            validationErrors.phone 
+                              ? "border-red-500/50 focus:border-red-500/70 shadow-[0_0_10px_rgba(239,68,68,0.05)]" 
+                              : "border-zinc-850 focus:border-indigo-500/50"
+                          } rounded-xl px-4 py-3 text-xs text-zinc-200 placeholder:text-zinc-650 focus:outline-none transition-all disabled:opacity-50`}
                         />
+                        {validationErrors.phone && (
+                          <p className="text-[10px] text-red-400 font-medium flex items-center gap-1.5 mt-1 animate-pulse">
+                            <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                            {validationErrors.phone}
+                          </p>
+                        )}
                       </div>
 
                       <div className="space-y-1.5">
                         <label className="text-[11px] uppercase tracking-wider font-bold text-zinc-400">Email *</label>
                         <input 
                           type="email"
-                          required
                           disabled={formLoading}
                           value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          onChange={(e) => {
+                            setFormData({ ...formData, email: e.target.value });
+                            if (validationErrors.email) {
+                              setValidationErrors(prev => {
+                                const copy = { ...prev };
+                                delete copy.email;
+                                return copy;
+                              });
+                            }
+                          }}
                           placeholder="partner@company.ru"
-                          className="w-full bg-zinc-950 border border-zinc-850 focus:border-indigo-500/50 rounded-xl px-4 py-3 text-xs text-zinc-200 placeholder:text-zinc-650 focus:outline-none transition-all disabled:opacity-50"
+                          className={`w-full bg-zinc-950 border ${
+                            validationErrors.email 
+                              ? "border-red-500/50 focus:border-red-500/70 shadow-[0_0_10px_rgba(239,68,68,0.05)]" 
+                              : "border-zinc-850 focus:border-indigo-500/50"
+                          } rounded-xl px-4 py-3 text-xs text-zinc-200 placeholder:text-zinc-650 focus:outline-none transition-all disabled:opacity-50`}
                         />
+                        {validationErrors.email && (
+                          <p className="text-[10px] text-red-400 font-medium flex items-center gap-1.5 mt-1 animate-pulse">
+                            <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                            {validationErrors.email}
+                          </p>
+                        )}
                       </div>
 
                     </div>
@@ -1397,20 +1491,38 @@ export default function PortfolioHome() {
                     <div className="space-y-1.5">
                       <label className="text-[11px] uppercase tracking-wider font-bold text-zinc-400">Сообщение / Комментарий *</label>
                       <textarea 
-                        required
                         disabled={formLoading}
                         value={formData.comment}
-                        onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
+                        onChange={(e) => {
+                          setFormData({ ...formData, comment: e.target.value });
+                          if (validationErrors.comment) {
+                            setValidationErrors(prev => {
+                              const copy = { ...prev };
+                              delete copy.comment;
+                              return copy;
+                            });
+                          }
+                        }}
                         placeholder="Опишите ваши задачи или проект. С удовольствием отвечу!"
                         rows={5}
-                        className="w-full bg-zinc-950 border border-zinc-850 focus:border-indigo-500/50 rounded-xl p-4 text-xs text-zinc-200 placeholder:text-zinc-650 focus:outline-none transition-all disabled:opacity-50"
+                        className={`w-full bg-zinc-950 border ${
+                          validationErrors.comment 
+                            ? "border-red-500/50 focus:border-red-500/70 shadow-[0_0_10px_rgba(239,68,68,0.05)]" 
+                            : "border-zinc-850 focus:border-indigo-500/50"
+                        } rounded-xl p-4 text-xs text-zinc-200 placeholder:text-zinc-650 focus:outline-none transition-all disabled:opacity-50`}
                       />
+                      {validationErrors.comment && (
+                        <p className="text-[10px] text-red-400 font-medium flex items-center gap-1.5 mt-1 animate-pulse">
+                          <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                          {validationErrors.comment}
+                        </p>
+                      )}
                     </div>
 
                     {/* Error display */}
                     {formError && (
                       <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
                         <span>{formError}</span>
                       </div>
                     )}
