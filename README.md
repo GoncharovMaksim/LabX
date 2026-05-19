@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Портфолио & ИИ-Ассистент разработчика
 
-## Getting Started
+Современное адаптивное веб-приложение портфолио с интеграцией интерактивного ИИ-интервьюера и интеллектуального анализатора вакансий.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🚀 Как запустить проект
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Для локального запуска проекта выполните следующие шаги:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Клонируйте репозиторий:**
+   ```bash
+   git clone <url_репозитория>
+   cd LabX
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. **Установите зависимости:**
+   ```bash
+   npm install
+   ```
 
-## Learn More
+3. **Настройте переменные окружения:**
+   Создайте файл `.env.local` в корневой папке и укажите необходимые ключи API и настройки почты:
+   ```env
+   # API Ключ для работы ИИ-ассистента (Gemini 3.1 Flash Lite)
+   GEMINI_API_KEY=ваш_api_ключ
 
-To learn more about Next.js, take a look at the following resources:
+   # Настройки SMTP для отправки писем из формы контактов
+   SMTP_HOST=smtp.example.com
+   SMTP_PORT=587
+   SMTP_USER=your_username@example.com
+   SMTP_PASS=your_secret_password
+   SMTP_FROM="Максим Гончаров <your_username@example.com>"
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+4. **Запустите сервер для разработки:**
+   ```bash
+   npm run dev
+   ```
+   Откройте [http://localhost:3000](http://localhost:3000) в браузере для просмотра.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🛠 Использованный технологический стек
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+* **Frontend:** React 19 (с использованием хуков состояния, ссылок и эффектов), Next.js 16 (App Router, Server Actions, гибридный рендеринг SSR/SSG), TypeScript для строгой типизации.
+* **Стилизация:** Tailwind CSS (v4) для быстрого построения премиального адаптивного UI в темных тонах с эффектами размытия (glassmorphism), градиентами и микро-анимациями.
+* **Иконки:** Lucide-React.
+* **Бэкенд & Интеграции:** Next.js Route Handlers (API эндпоинты), Nodemailer для отправки писем, Native Fetch API.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## ✉️ Как реализована форма обратной связи
+
+Форма контактов в секции "Давайте создадим что-то крутое!" построена как полноценный безопасный модуль отправки писем:
+1. **Клиентская часть:** Интерактивная форма с валидацией полей ввода в реальном времени. Во время отправки блокируется кнопка и выводится стильный индикатор загрузки.
+2. **Бэкенд часть:** При отправке формы данные уходят на защищенный Route Handler `/api/contact`.
+3. **Отправка писем:** Сервер инициализирует SMTP-транспорт с помощью библиотеки `Nodemailer`. Используя защищенные переменные среды (`SMTP_HOST`, `SMTP_PORT` и т.д.), он отправляет письмо на личную почту кандидата и возвращает клиенту корректный JSON-ответ.
+4. **Резервный сценарий:** При локальной разработке без настроенного SMTP система логирует отправляемые сообщения и выводит пользователю информативное уведомление.
+
+---
+
+## 🤖 Использованные AI-инструменты и процессы
+
+Проект разрабатывался по принципу гибридного парного программирования:
+* **Инструменты:** Использовались передовые языковые модели и Copilot-решения для ускорения разработки рутинных компонентов.
+* **Что делалось с помощью ИИ:**
+  * Первичная генерация базовой верстки (создание заготовок сеток Tailwind, подбор темной цветовой схемы HSL).
+  * Написание шаблонов системных промптов для ИИ-интервьюера и анализатора вакансий.
+  * Разработка моковых ответов (`presetJDs`) для демонстрационного режима работы.
+
+---
+
+## ✍️ Что пришлось исправлять и настраивать вручную
+
+Интеграция ИИ-помощника позволила сэкономить время, однако вся финальная полировка, отладка и логика связывания компонентов проводилась вручную разработчиком:
+1. **Архитектурный рефакторинг табов:** ИИ предлагал неявное переключение экранов на основе анализа полей вакансий, что приводило к багу «блокировки» Анализатора. Логика переключения была полностью переписана вручную с использованием чистого состояния `activeAiTab` стейта, обеспечив 100% стабильную навигацию.
+2. **Исправление поведения прокрутки (Scroll Hijacking):** ИИ предлагал использовать стандартный метод `scrollIntoView`, который при каждом новом сообщении сдвигал весь экран пользователя вниз к форме контактов. Поведение было скорректировано вручную с помощью настройки `{ behavior: "smooth", block: "nearest" }`, чтобы прокрутка происходила строго внутри окна чата.
+3. **Изоляция авто-скролла при загрузке:** ИИ-сценарий вызывал нежелательный скролл страницы на самый низ при первом открытии сайта. Проблема была вручную решена внедрением защитных проверок длины массива сообщений в `useEffect` хуке.
+4. **Безопасность API-клиента:** Написана и настроена защищенная интеграция через OpenAI-совместимый эндпоинт для Gemini с обработкой ошибок API и автоматическим переключением в качественный демо-режим при отсутствии ключей в окружении.
