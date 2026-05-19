@@ -9,6 +9,25 @@
   --secondary-glow: rgba(16, 185, 129, 0.15);
 }
 
+html {
+  /* Базовый размер шрифта для мобильных устройств (чтобы текст не был слишком мелким) */
+  font-size: 14px;
+}
+
+@media (min-width: 768px) and (max-width: 1600px) {
+  html {
+    /* Динамическое масштабирование всего интерфейса (Tailwind rem-классов) на основе ширины экрана */
+    font-size: 0.95vw;
+  }
+}
+
+@media (min-width: 1600px) {
+  html {
+    /* Ограничение масштабирования на ультрашироких мониторах для сохранения читаемости */
+    font-size: 15.2px;
+  }
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);
