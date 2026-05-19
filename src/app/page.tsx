@@ -94,6 +94,7 @@ export default function PortfolioHome() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [copiedCoverLetter, setCopiedCoverLetter] = useState(false);
+  const [activeAiTab, setActiveAiTab] = useState<"chat" | "analyzer">("chat");
 
   // Scroll Spy for Navbar highlight
   useEffect(() => {
@@ -984,9 +985,9 @@ export default function PortfolioHome() {
               {/* Tab Selector Left Column */}
               <div className="lg:col-span-3 bg-zinc-950/40 border-r border-zinc-900 p-4 space-y-2 flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-2 lg:gap-0">
                 <button 
-                  onClick={() => { setAnalysisError(null); }}
+                  onClick={() => setActiveAiTab("chat")}
                   className={`w-full text-left px-4 py-3 rounded-xl flex items-center gap-2.5 transition-all text-xs font-semibold whitespace-nowrap ${
-                    !analysisResult && !analysisLoading && !analysisError
+                    activeAiTab === "chat"
                       ? "bg-indigo-600/10 text-indigo-400 border border-indigo-500/20"
                       : "hover:bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-transparent"
                   }`}
@@ -995,13 +996,9 @@ export default function PortfolioHome() {
                   ИИ Чат-Ассистент
                 </button>
                 <button 
-                  onClick={() => { 
-                    if (!analysisResult) {
-                      setJobDescription("");
-                    }
-                  }}
+                  onClick={() => setActiveAiTab("analyzer")}
                   className={`w-full text-left px-4 py-3 rounded-xl flex items-center gap-2.5 transition-all text-xs font-semibold whitespace-nowrap ${
-                    analysisResult || analysisLoading || analysisError
+                    activeAiTab === "analyzer"
                       ? "bg-indigo-600/10 text-indigo-400 border border-indigo-500/20"
                       : "hover:bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-transparent"
                   }`}
@@ -1015,7 +1012,7 @@ export default function PortfolioHome() {
               <div className="lg:col-span-9 p-6 flex flex-col justify-between bg-zinc-900/10">
                 
                 {/* 1. CHAT MODE */}
-                {!analysisResult && !analysisLoading && !analysisError && !jobDescription ? (
+                {activeAiTab === "chat" ? (
                   <div className="flex-1 flex flex-col justify-between h-full space-y-6">
                     
                     {/* Chat Messages */}
@@ -1107,8 +1104,7 @@ export default function PortfolioHome() {
                   </div>
                 ) : null}
 
-                {/* 2. VACANCY ANALYZER - INPUT STATE */}
-                {(jobDescription || analysisLoading || analysisError || analysisResult) && !analysisResult && !analysisLoading && !analysisError ? (
+                {activeAiTab === "analyzer" && !analysisResult && !analysisLoading && !analysisError ? (
                   <div className="flex-1 flex flex-col justify-between h-full space-y-4">
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -1163,7 +1159,7 @@ export default function PortfolioHome() {
                 ) : null}
 
                 {/* 3. VACANCY ANALYZER - LOADING STATE */}
-                {analysisLoading && (
+                {activeAiTab === "analyzer" && analysisLoading && (
                   <div className="flex-1 flex flex-col items-center justify-center space-y-6 py-12 select-none">
                     
                     {/* Animated scanning radar */}
@@ -1186,7 +1182,7 @@ export default function PortfolioHome() {
                 )}
 
                 {/* 4. VACANCY ANALYZER - ANALYSIS RESULT STATE */}
-                {analysisResult && !analysisLoading && (
+                {activeAiTab === "analyzer" && analysisResult && !analysisLoading && (
                   <div className="flex-1 flex flex-col justify-between space-y-6">
                     
                     {/* Compatibility score layout */}
@@ -1290,7 +1286,7 @@ export default function PortfolioHome() {
                 )}
 
                 {/* 5. VACANCY ANALYZER - ERROR STATE */}
-                {analysisError && (
+                {activeAiTab === "analyzer" && analysisError && (
                   <div className="flex-1 flex flex-col items-center justify-center space-y-4 py-12">
                     <AlertCircle className="w-12 h-12 text-red-500" />
                     <div className="text-center space-y-1">
