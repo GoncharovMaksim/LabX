@@ -1641,7 +1641,7 @@ export default function PortfolioHome() {
           </div>
 
           <div className="text-[10px] text-zinc-650 font-mono">
-            Создано с помощью React 19, Next.js 16 и ИИ-Ассистента Antigravity.
+            Разработано с использованием React, Next.js и Tailwind CSS.
           </div>
 
           <div className="flex gap-4">

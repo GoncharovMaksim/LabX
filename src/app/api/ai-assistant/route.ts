@@ -32,7 +32,7 @@ const RESUME_DATA = `
 - GitHub: https://github.com/GoncharovMaksim
 `;
 
-// Helper: Sophisticated local fallback response generator
+// Локальный генератор ответов для демо-режима
 function getLocalFallbackResponse(type: string, query?: string, jobDescription?: string) {
   if (type === "chat" && query) {
     const q = query.toLowerCase();
@@ -187,12 +187,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Для анализа требуется параметр 'jobDescription'" }, { status: 400 });
     }
 
-    // Check for API Keys
+    // Проверка ключей авторизации
     const geminiKey = process.env.GEMINI_API_KEY;
     const openaiKey = process.env.OPENAI_API_KEY;
 
     if (geminiKey) {
-      // Use Gemini API via OpenAI-compatible endpoint
+      // Запрос к Gemini через совместимый с OpenAI эндпоинт
       console.log("[AI API] Contacting Gemini API (OpenAI-compatible)...");
       
       const systemMessage = type === "chat" 
@@ -239,7 +239,7 @@ export async function POST(request: Request) {
         }
       } catch (geminiError: any) {
         console.error("[Gemini API Error] Falling back to local engine:", geminiError);
-        // Fallback to local
+        // Возврат локального ответа в случае ошибки
         const fallback = getLocalFallbackResponse(type, query, jobDescription);
         return NextResponse.json({
           ...fallback,
@@ -247,7 +247,7 @@ export async function POST(request: Request) {
         });
       }
     } else if (openaiKey) {
-      // Use OpenAI API if configured
+      // Запрос к OpenAI API
       console.log("[AI API] Contacting OpenAI API...");
       const systemMessage = type === "chat" 
         ? `Вы — ИИ-рекрутер-ассистент разработчика Максима Гончарова (Fullstack: React, Next.js, TS, Node.js, 4 года опыта). Ваша задача — отвечать на вопросы работодателей на основе его резюме:\n${RESUME_DATA}\nОтвечайте на русском языке, вежливо, уверенно и профессионально. Выделяйте главное жирным текстом.`
@@ -300,7 +300,7 @@ export async function POST(request: Request) {
         });
       }
     } else {
-      // Local Recruiting Engine mode
+      // Демо-режим (если ключи не заданы)
       console.log("[AI API] Running in Demo Mode (No API keys configured).");
       const result = getLocalFallbackResponse(type, query, jobDescription);
       return NextResponse.json(result);
