@@ -272,7 +272,7 @@ Ensure the output is valid JSON *only*, formatted as:
         const fallback = getLocalFallbackResponse(type, query, jobDescription);
         return NextResponse.json({
           ...fallback,
-          warning: "Gemini API Error, fell back to local recruiting engine.",
+          warning: `Gemini API Error: ${geminiError.message || geminiError}. Fell back to local recruiting engine.`,
         });
       }
     } else if (openaiKey) {
@@ -325,7 +325,7 @@ Ensure the output is valid JSON *only*, formatted as:
         const fallback = getLocalFallbackResponse(type, query, jobDescription);
         return NextResponse.json({
           ...fallback,
-          warning: "OpenAI API Error, fell back to local recruiting engine.",
+          warning: `OpenAI API Error: ${openaiError.message || openaiError}. Fell back to local recruiting engine.`,
         });
       }
     } else {

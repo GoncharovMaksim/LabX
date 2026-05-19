@@ -118,9 +118,11 @@ export default function PortfolioHome() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Auto-scroll chat to bottom
+  // Auto-scroll chat to bottom (only when user actively chats, preventing scroll on load)
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatMessages.length > 1 || chatLoading) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [chatMessages, chatLoading]);
 
   // Handle Contact Form Submit
