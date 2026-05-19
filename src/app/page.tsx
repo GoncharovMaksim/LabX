@@ -121,7 +121,7 @@ export default function PortfolioHome() {
   // Auto-scroll chat to bottom (only when user actively chats, preventing scroll on load)
   useEffect(() => {
     if (chatMessages.length > 1 || chatLoading) {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [chatMessages, chatLoading]);
 
