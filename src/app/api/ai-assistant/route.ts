@@ -192,75 +192,46 @@ export async function POST(request: Request) {
     const openaiKey = process.env.OPENAI_API_KEY;
 
     if (geminiKey) {
-      // Use Gemini API
-      console.log("[AI API] Contacting Gemini API...");
-      let prompt = "";
+      // Use Gemini API via OpenAI-compatible endpoint
+      console.log("[AI API] Contacting Gemini API (OpenAI-compatible)...");
+      
+      const systemMessage = type === "chat" 
+        ? `Вы — ИИ-рекрутер-ассистент разработчика Максима Гончарова (Fullstack: React, Next.js, TS, Node.js, 4 года опыта). Ваша задача — отвечать на вопросы работодателей на основе его резюме:\n${RESUME_DATA}\nОтвечайте на русском языке, вежливо, уверенно и профессионально. Выделяйте главное жирным текстом.`
+        : `Вы — ИИ-аналитик резюме разработчика Максима Гончарова. Ваша задача — проанализировать Job Description вакансии и сопоставить с резюме Максима:\n${RESUME_DATA}\nВерните ответ строго в формате JSON: {"score": число от 50 до 99, "matchedSkills": ["навык1", "навык2"], "missingSkills": ["навык3"], "coverLetter": "профессиональное сопроводительное письмо на русском, адаптированное под вакансию"}`;
 
-      if (type === "chat") {
-        prompt = `
-You are the AI Recruiter Assistant of Maxim Goncharov. Maxim is a Senior/Middle Fullstack Web Developer with 4.4 years of experience.
-Here is Maxim's resume/CV data:
-${RESUME_DATA}
-
-Answer the user's question about Maxim professionally, confidently and in a friendly recruiter tone. Answer in Russian. Keep the answer concise (2-4 paragraphs). Use bold text for key achievements.
-Question: ${query}
-`;
-      } else {
-        prompt = `
-You are the AI Hiring Recruiter Assistant of Maxim Goncharov. Maxim is a Fullstack Developer (React, Next.js, TS, Node.js) with 4.4 years of experience.
-Here is Maxim's resume/CV data:
-${RESUME_DATA}
-
-Analyze the following Job Description (JD) and Maxim's resume.
-Provide a JSON response containing:
-1. "score": a number from 50 to 99 indicating compatibility percentage.
-2. "matchedSkills": array of up to 5 matching skills from Maxim's stack.
-3. "missingSkills": array of up to 2 skills in the JD that Maxim does not have listed (or general skills to improve).
-4. "coverLetter": a highly tailored, professionally written cover letter in Russian from Maxim to the company. In the letter, emphasize how Maxim's actual RZD and Simple-Up achievements match the requirements. Make it convincing and extremely professional.
-
-Job Description to analyze:
-${jobDescription}
-
-Ensure the output is valid JSON *only*, formatted as:
-{
-  "score": 92,
-  "matchedSkills": ["Next.js", "TypeScript", "Tailwind CSS"],
-  "missingSkills": ["GraphQL"],
-  "coverLetter": "text here..."
-}
-`;
-      }
+      const userMessage = type === "chat" ? query : `Проанализируй вакансию:\n${jobDescription}`;
 
       try {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: type === "analyze" ? { responseMimeType: "application/json" } : undefined,
-            }),
-          }
-        );
+        const response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${geminiKey}`,
+          },
+          body: JSON.stringify({
+            model: "gemini-3.1-flash-lite",
+            response_format: type === "analyze" ? { type: "json_object" } : undefined,
+            messages: [
+              { role: "system", content: systemMessage },
+              { role: "user", content: userMessage },
+            ],
+          }),
+        });
 
         if (!response.ok) {
           throw new Error(`Gemini API returned status ${response.status}`);
         }
 
         const data = await response.json();
-        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const content = data.choices?.[0]?.message?.content;
 
         if (type === "chat") {
           return NextResponse.json({
-            answer: responseText || "Извините, не удалось сгенерировать ответ.",
+            answer: content || "Извините, не удалось получить ответ от ИИ.",
             simulated: false,
           });
         } else {
-          // Parse JSON from Gemini
-          const parsed = JSON.parse(responseText);
+          const parsed = JSON.parse(content);
           return NextResponse.json({
             ...parsed,
             simulated: false,
